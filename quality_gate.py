@@ -25,7 +25,7 @@ print("=" * 50)
 print("\nRunning Pylint analysis...")
 
 pylint_output = run_command(
-    "python -m pylint app tests"
+    f'"{sys.executable}" -m pylint app tests'
 )
 
 print(pylint_output)
@@ -56,7 +56,7 @@ print("Pylint quality gate PASSED.")
 print("\nRunning Radon complexity analysis...")
 
 radon_output = run_command(
-    "python -m radon cc app -a -s"
+    f'"{sys.executable}" -m radon cc app -a -s'
 )
 
 print(radon_output)
