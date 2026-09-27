@@ -1,9 +1,13 @@
+import csv
+import os
 import re
 import subprocess
 import sys
+from datetime import datetime
 
 PYLINT_MIN_SCORE = 8.0
 MAX_COMPLEXITY = 10
+TREND_FILE = "quality_history.csv"
 
 
 def run_command(command):
@@ -80,6 +84,39 @@ if highest_complexity > MAX_COMPLEXITY:
     sys.exit(1)
 
 print("Complexity quality gate PASSED.")
+
+
+# ---------------- QUALITY TREND MONITORING ----------------
+
+print("\nRecording quality trend...")
+
+build_number = os.environ.get("BUILD_NUMBER", "LOCAL")
+timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+file_exists = os.path.exists(TREND_FILE)
+
+with open(TREND_FILE, "a", newline="", encoding="utf-8") as file:
+    writer = csv.writer(file)
+
+    if not file_exists:
+        writer.writerow([
+            "Build",
+            "Timestamp",
+            "Pylint Score",
+            "Highest Complexity"
+        ])
+
+    writer.writerow([
+        build_number,
+        timestamp,
+        f"{pylint_score:.2f}",
+        highest_complexity
+    ])
+
+print(f"Quality trend recorded in {TREND_FILE}")
+print(f"Build: {build_number}")
+print(f"Pylint score: {pylint_score:.2f}/10")
+print(f"Highest complexity: {highest_complexity}")
 
 print("\n" + "=" * 50)
 print("ALL CODE QUALITY GATES PASSED")
