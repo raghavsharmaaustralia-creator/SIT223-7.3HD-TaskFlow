@@ -4,6 +4,11 @@ pipeline {
     environment {
         APP_NAME = 'TaskFlow'
         BUILD_VERSION = "1.0.${BUILD_NUMBER}"
+
+        // Base Python used only to create the Jenkins virtual environment
+        BASE_PYTHON = 'C:\\msys64\\mingw64\\bin\\python.exe'
+
+        // Jenkins creates and manages this environment inside its workspace
         VENV_DIR = '.jenkins-venv'
         PYTHON = '.jenkins-venv\\Scripts\\python.exe'
     }
@@ -18,32 +23,35 @@ pipeline {
                 echo 'Preparing reproducible Python environment'
                 echo '========================================='
 
-                // Display system Python version
-                bat 'python --version'
+                // Verify the base Python installation
+                bat '"%BASE_PYTHON%" --version'
 
-                // Create a Jenkins workspace-local virtual environment
+                // Remove any previous Jenkins environment
                 bat 'if exist "%VENV_DIR%" rmdir /S /Q "%VENV_DIR%"'
-                bat 'python -m venv "%VENV_DIR%"'
 
-                // Upgrade pip inside the isolated environment
+                // Create a fresh virtual environment inside Jenkins workspace
+                bat '"%BASE_PYTHON%" -m venv "%VENV_DIR%"'
+
+                // Upgrade pip inside the fresh environment
                 bat '"%PYTHON%" -m pip install --upgrade pip'
 
-                // Install project dependencies from version-controlled requirements
+                // Install project dependencies from requirements.txt
                 bat '"%PYTHON%" -m pip install -r requirements.txt'
 
-                // Verify the isolated Python environment
+                // Verify the environment and dependencies
                 bat '"%PYTHON%" --version'
                 bat '"%PYTHON%" -m pip check'
 
-                // Create versioned build artifact
+                // Create a clean build directory
                 bat 'if exist build rmdir /S /Q build'
                 bat 'mkdir build'
 
+                // Create versioned application artifact
                 bat 'tar -acf build\\TaskFlow-%BUILD_VERSION%.zip app tests run.py requirements.txt'
 
                 echo "Build artifact created: TaskFlow-${BUILD_VERSION}.zip"
 
-                // Store and fingerprint the artifact in Jenkins
+                // Store and fingerprint the versioned artifact in Jenkins
                 archiveArtifacts artifacts: 'build/*.zip',
                                  fingerprint: true
 
