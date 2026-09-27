@@ -31,12 +31,14 @@ pipeline {
         stage('Test') {
             steps {
                 echo '========================================='
-                echo 'Running automated tests'
+                echo 'Running Unit and Integration Tests'
                 echo '========================================='
 
-                bat '"C:\\Users\\ragha\\Downloads\\SIT223-7.3HD-TaskFlow\\venv\\Scripts\\python.exe" -m pytest -v'
+                bat '"C:\\Users\\ragha\\Downloads\\SIT223-7.3HD-TaskFlow\\venv\\Scripts\\python.exe" -m pytest -v --junitxml=test-results.xml'
 
-                echo 'All automated tests passed successfully'
+                junit 'test-results.xml'
+
+                echo 'Unit and integration test gate PASSED'
             }
         }
     }
