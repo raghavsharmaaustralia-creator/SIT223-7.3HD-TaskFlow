@@ -16,9 +16,11 @@ pipeline {
                 echo '========================================='
 
                 bat '"C:\\Users\\ragha\\Downloads\\SIT223-7.3HD-TaskFlow\\venv\\Scripts\\python.exe" --version'
+
                 bat '"C:\\Users\\ragha\\Downloads\\SIT223-7.3HD-TaskFlow\\venv\\Scripts\\python.exe" -m pip install -r requirements.txt'
 
                 bat 'if not exist build mkdir build'
+
                 bat 'tar -acf build\\TaskFlow-%BUILD_VERSION%.zip app tests run.py requirements.txt'
 
                 echo "Build artifact created: TaskFlow-${BUILD_VERSION}.zip"
@@ -39,6 +41,18 @@ pipeline {
                 junit 'test-results.xml'
 
                 echo 'Unit and integration test gate PASSED'
+            }
+        }
+
+        stage('Code Quality') {
+            steps {
+                echo '========================================='
+                echo 'Running Code Quality Analysis'
+                echo '========================================='
+
+                bat '"C:\\Users\\ragha\\Downloads\\SIT223-7.3HD-TaskFlow\\venv\\Scripts\\python.exe" quality_gate.py'
+
+                echo 'Code Quality gate PASSED'
             }
         }
     }

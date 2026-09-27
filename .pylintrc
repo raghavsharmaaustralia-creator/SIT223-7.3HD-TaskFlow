@@ -1,0 +1,21 @@
+[MAIN]
+ignore=venv,build,instance,.pytest_cache
+ignore-patterns=^\.git
+
+[MESSAGES CONTROL]
+disable=
+    C0114,
+    C0115,
+    C0116
+
+[FORMAT]
+max-line-length=100
+
+[DESIGN]
+max-args=6
+max-locals=15
+max-branches=12
+max-statements=50
+
+[REPORTS]
+score=yes
