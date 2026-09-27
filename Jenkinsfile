@@ -15,8 +15,8 @@ pipeline {
                 echo "Build Version: ${BUILD_VERSION}"
                 echo '========================================='
 
-                bat 'python --version'
-                bat 'python -m pip install -r requirements.txt'
+                bat 'py --version'
+                bat 'py -m pip install -r requirements.txt'
 
                 bat 'if not exist build mkdir build'
                 bat 'tar -acf build\\TaskFlow-%BUILD_VERSION%.zip app tests run.py requirements.txt'
