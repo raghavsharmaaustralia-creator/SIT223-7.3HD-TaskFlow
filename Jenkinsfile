@@ -23,35 +23,26 @@ pipeline {
                 echo 'Preparing reproducible Python environment'
                 echo '========================================='
 
-                // Verify the base Python installation
                 bat '"%BASE_PYTHON%" --version'
 
-                // Remove any previous Jenkins environment
                 bat 'if exist "%VENV_DIR%" rmdir /S /Q "%VENV_DIR%"'
 
-                // Create a fresh virtual environment inside Jenkins workspace
                 bat '"%BASE_PYTHON%" -m venv "%VENV_DIR%"'
 
-                // Upgrade pip inside the fresh environment
                 bat '"%PYTHON%" -m pip install --upgrade pip'
 
-                // Install project dependencies from requirements.txt
                 bat '"%PYTHON%" -m pip install -r requirements.txt'
 
-                // Verify the environment and dependencies
                 bat '"%PYTHON%" --version'
                 bat '"%PYTHON%" -m pip check'
 
-                // Create a clean build directory
                 bat 'if exist build rmdir /S /Q build'
                 bat 'mkdir build'
 
-                // Create versioned application artifact
                 bat 'tar -acf build\\TaskFlow-%BUILD_VERSION%.zip app tests run.py requirements.txt'
 
                 echo "Build artifact created: TaskFlow-${BUILD_VERSION}.zip"
 
-                // Store and fingerprint the versioned artifact in Jenkins
                 archiveArtifacts artifacts: 'build/*.zip',
                                  fingerprint: true
 
@@ -156,19 +147,7 @@ pipeline {
                 echo 'Automatic alert generated if production becomes unavailable'
 
                 bat '''
-                    powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-                    "$python = Join-Path $env:WORKSPACE '.jenkins-venv\\Scripts\\python.exe'; ^
-                    $production = Join-Path $env:WORKSPACE 'production'; ^
-                    $env:APP_ENV = 'production'; ^
-                    $env:PORT = '5060'; ^
-                    $process = Start-Process -FilePath $python -ArgumentList 'run.py' -WorkingDirectory $production -PassThru; ^
-                    try { ^
-                        Start-Sleep -Seconds 3; ^
-                        & $python 'monitor.py'; ^
-                        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } ^
-                    } finally { ^
-                        Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue ^
-                    }"
+                    powershell -NoProfile -ExecutionPolicy Bypass -Command "$python = Join-Path $env:WORKSPACE '.jenkins-venv\\Scripts\\python.exe'; $production = Join-Path $env:WORKSPACE 'production'; $env:APP_ENV = 'production'; $env:PORT = '5060'; $process = Start-Process -FilePath $python -ArgumentList 'run.py' -WorkingDirectory $production -PassThru; try { Start-Sleep -Seconds 3; & $python 'monitor.py'; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } } finally { Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue }"
                 '''
 
                 archiveArtifacts artifacts: 'monitoring_history.csv',
