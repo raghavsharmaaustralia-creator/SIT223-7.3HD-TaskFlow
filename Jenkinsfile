@@ -10,7 +10,7 @@ pipeline {
 
         // Jenkins creates and manages this environment inside its workspace
         VENV_DIR = '.jenkins-venv'
-        PYTHON = '.jenkins-venv\\Scripts\\python.exe'
+        PYTHON = '.jenkins-venv\\bin\\python.exe'
     }
 
     stages {
