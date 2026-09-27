@@ -5,12 +5,12 @@ pipeline {
         APP_NAME = 'TaskFlow'
         BUILD_VERSION = "1.0.${BUILD_NUMBER}"
 
-        // Base Python used only to create the Jenkins virtual environment
-        BASE_PYTHON = 'C:\\msys64\\mingw64\\bin\\python.exe'
+        // Standard Windows Python used to create the Jenkins virtual environment
+        BASE_PYTHON = 'C:\\Users\\ragha\\AppData\\Local\\Programs\\Python\\Python313\\python.exe'
 
         // Jenkins creates and manages this environment inside its workspace
         VENV_DIR = '.jenkins-venv'
-        PYTHON = '.jenkins-venv\\bin\\python.exe'
+        PYTHON = '.jenkins-venv\\Scripts\\python.exe'
     }
 
     stages {
