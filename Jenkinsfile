@@ -71,5 +71,25 @@ pipeline {
                 echo 'Security gate PASSED'
             }
         }
+
+        stage('Deploy') {
+            steps {
+                echo '========================================='
+                echo 'Deploying TaskFlow to Test Environment'
+                echo '========================================='
+
+                bat '"C:\\Users\\ragha\\Downloads\\SIT223-7.3HD-TaskFlow\\venv\\Scripts\\python.exe" deploy.py'
+
+                bat 'if exist deploy\\app echo Application files deployed successfully'
+                bat 'if exist deploy\\run.py echo Deployment package verified'
+                bat 'if exist deploy\\requirements.txt echo Dependencies file verified'
+
+                archiveArtifacts artifacts: 'deploy/**',
+                                 fingerprint: true
+
+                echo 'Deploy stage PASSED'
+                echo 'TaskFlow deployed to test environment'
+            }
+        }
     }
 }
