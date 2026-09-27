@@ -1,5 +1,10 @@
+import os
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+
+from app.config import CONFIGS
+
 
 db = SQLAlchemy()
 
@@ -7,8 +12,9 @@ db = SQLAlchemy()
 def create_app(test_config=None):
     app = Flask(__name__)
 
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///taskflow.db"
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    environment = os.getenv("APP_ENV", "development").lower()
+    config_class = CONFIGS.get(environment, CONFIGS["development"])
+    app.config.from_object(config_class)
 
     if test_config:
         app.config.update(test_config)

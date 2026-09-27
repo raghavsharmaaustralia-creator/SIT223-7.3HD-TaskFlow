@@ -5,3 +5,5 @@ __pycache__/
 instance/
 *.db
 .env
+deploy/
+deploy_backup/
