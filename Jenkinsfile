@@ -121,5 +121,28 @@ pipeline {
                 echo 'TaskFlow deployed to test environment'
             }
         }
+
+        stage('Release') {
+            steps {
+                echo '========================================='
+                echo 'Releasing TaskFlow to Production'
+                echo '========================================='
+
+                echo 'Promoting verified staging deployment'
+                echo 'Running production health verification'
+
+                bat '"%PYTHON%" release.py'
+
+                bat 'if exist production\\app echo Production application files verified'
+                bat 'if exist production\\run.py echo Production run.py verified'
+                bat 'if exist production\\requirements.txt echo Production dependencies verified'
+
+                archiveArtifacts artifacts: 'production/**',
+                                 fingerprint: true
+
+                echo 'Release stage PASSED'
+                echo 'TaskFlow released to production successfully'
+            }
+        }
     }
 }
