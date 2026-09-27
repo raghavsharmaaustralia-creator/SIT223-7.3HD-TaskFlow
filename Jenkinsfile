@@ -59,5 +59,17 @@ pipeline {
                 echo 'Quality trend history archived successfully'
             }
         }
+
+        stage('Security') {
+            steps {
+                echo '========================================='
+                echo 'Running Security Analysis'
+                echo '========================================='
+
+                bat '"C:\\Users\\ragha\\Downloads\\SIT223-7.3HD-TaskFlow\\venv\\Scripts\\python.exe" security_gate.py'
+
+                echo 'Security gate PASSED'
+            }
+        }
     }
 }
