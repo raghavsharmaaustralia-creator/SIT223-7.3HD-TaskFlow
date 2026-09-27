@@ -7,3 +7,5 @@ instance/
 .env
 deploy/
 deploy_backup/
+.jenkins-venv/
+build/

@@ -4,6 +4,8 @@ pipeline {
     environment {
         APP_NAME = 'TaskFlow'
         BUILD_VERSION = "1.0.${BUILD_NUMBER}"
+        VENV_DIR = '.jenkins-venv'
+        PYTHON = '.jenkins-venv\\Scripts\\python.exe'
     }
 
     stages {
@@ -13,20 +15,40 @@ pipeline {
                 echo '========================================='
                 echo "Building ${APP_NAME}"
                 echo "Build Version: ${BUILD_VERSION}"
+                echo 'Preparing reproducible Python environment'
                 echo '========================================='
 
-                bat '"C:\\Users\\ragha\\Downloads\\SIT223-7.3HD-TaskFlow\\venv\\Scripts\\python.exe" --version'
+                // Display system Python version
+                bat 'python --version'
 
-                bat '"C:\\Users\\ragha\\Downloads\\SIT223-7.3HD-TaskFlow\\venv\\Scripts\\python.exe" -m pip install -r requirements.txt'
+                // Create a Jenkins workspace-local virtual environment
+                bat 'if exist "%VENV_DIR%" rmdir /S /Q "%VENV_DIR%"'
+                bat 'python -m venv "%VENV_DIR%"'
 
-                bat 'if not exist build mkdir build'
+                // Upgrade pip inside the isolated environment
+                bat '"%PYTHON%" -m pip install --upgrade pip'
+
+                // Install project dependencies from version-controlled requirements
+                bat '"%PYTHON%" -m pip install -r requirements.txt'
+
+                // Verify the isolated Python environment
+                bat '"%PYTHON%" --version'
+                bat '"%PYTHON%" -m pip check'
+
+                // Create versioned build artifact
+                bat 'if exist build rmdir /S /Q build'
+                bat 'mkdir build'
 
                 bat 'tar -acf build\\TaskFlow-%BUILD_VERSION%.zip app tests run.py requirements.txt'
 
                 echo "Build artifact created: TaskFlow-${BUILD_VERSION}.zip"
 
+                // Store and fingerprint the artifact in Jenkins
                 archiveArtifacts artifacts: 'build/*.zip',
                                  fingerprint: true
+
+                echo 'Build stage PASSED'
+                echo 'Versioned artifact archived and fingerprinted successfully'
             }
         }
 
@@ -36,7 +58,7 @@ pipeline {
                 echo 'Running Unit and Integration Tests'
                 echo '========================================='
 
-                bat '"C:\\Users\\ragha\\Downloads\\SIT223-7.3HD-TaskFlow\\venv\\Scripts\\python.exe" -m pytest -v --junitxml=test-results.xml'
+                bat '"%PYTHON%" -m pytest -v --junitxml=test-results.xml'
 
                 junit 'test-results.xml'
 
@@ -50,7 +72,7 @@ pipeline {
                 echo 'Running Code Quality Analysis'
                 echo '========================================='
 
-                bat '"C:\\Users\\ragha\\Downloads\\SIT223-7.3HD-TaskFlow\\venv\\Scripts\\python.exe" quality_gate.py'
+                bat '"%PYTHON%" quality_gate.py'
 
                 archiveArtifacts artifacts: 'quality_history.csv',
                                  fingerprint: true
@@ -66,7 +88,7 @@ pipeline {
                 echo 'Running Security Analysis'
                 echo '========================================='
 
-                bat '"C:\\Users\\ragha\\Downloads\\SIT223-7.3HD-TaskFlow\\venv\\Scripts\\python.exe" security_gate.py'
+                bat '"%PYTHON%" security_gate.py'
 
                 echo 'Security gate PASSED'
             }
@@ -78,7 +100,7 @@ pipeline {
                 echo 'Deploying TaskFlow to Test Environment'
                 echo '========================================='
 
-                bat '"C:\\Users\\ragha\\Downloads\\SIT223-7.3HD-TaskFlow\\venv\\Scripts\\python.exe" deploy.py'
+                bat '"%PYTHON%" deploy.py'
 
                 bat 'if exist deploy\\app echo Application files deployed successfully'
                 bat 'if exist deploy\\run.py echo Deployment package verified'
