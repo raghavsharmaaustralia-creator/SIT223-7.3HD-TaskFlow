@@ -144,5 +144,40 @@ pipeline {
                 echo 'TaskFlow released to production successfully'
             }
         }
+
+        stage('Monitoring') {
+            steps {
+                echo '========================================='
+                echo 'Monitoring TaskFlow Production'
+                echo '========================================='
+
+                echo 'Starting released production application'
+                echo 'Monitoring production health endpoint'
+                echo 'Automatic alert generated if production becomes unavailable'
+
+                bat '''
+                    powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+                    "$python = Join-Path $env:WORKSPACE '.jenkins-venv\\Scripts\\python.exe'; ^
+                    $production = Join-Path $env:WORKSPACE 'production'; ^
+                    $env:APP_ENV = 'production'; ^
+                    $env:PORT = '5060'; ^
+                    $process = Start-Process -FilePath $python -ArgumentList 'run.py' -WorkingDirectory $production -PassThru; ^
+                    try { ^
+                        Start-Sleep -Seconds 3; ^
+                        & $python 'monitor.py'; ^
+                        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } ^
+                    } finally { ^
+                        Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue ^
+                    }"
+                '''
+
+                archiveArtifacts artifacts: 'monitoring_history.csv',
+                                 fingerprint: true
+
+                echo 'Monitoring stage PASSED'
+                echo 'Production health monitoring completed successfully'
+                echo 'Monitoring results and alert status recorded'
+            }
+        }
     }
 }
