@@ -144,11 +144,15 @@ pipeline {
 
                 echo 'Starting released production application'
                 echo 'Monitoring production health endpoint'
-                echo 'Automatic alert generated if production becomes unavailable'
+                echo 'Testing automatic production incident alert'
 
-                bat '''
-                    powershell -NoProfile -ExecutionPolicy Bypass -Command "$python = Join-Path $env:WORKSPACE '.jenkins-venv\\Scripts\\python.exe'; $production = Join-Path $env:WORKSPACE 'production'; $env:APP_ENV = 'production'; $env:PORT = '5060'; $process = Start-Process -FilePath $python -ArgumentList 'run.py' -WorkingDirectory $production -PassThru; try { Start-Sleep -Seconds 3; & $python 'monitor.py'; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } } finally { Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue }"
-                '''
+                // Temporarily simulate an unhealthy production state
+                // to demonstrate the automatic monitoring alert.
+                withEnv(['SIMULATE_MONITORING_FAILURE=true']) {
+                    bat '''
+                        powershell -NoProfile -ExecutionPolicy Bypass -Command "$python = Join-Path $env:WORKSPACE '.jenkins-venv\\Scripts\\python.exe'; $production = Join-Path $env:WORKSPACE 'production'; $env:APP_ENV = 'production'; $env:PORT = '5060'; $process = Start-Process -FilePath $python -ArgumentList 'run.py' -WorkingDirectory $production -PassThru; try { Start-Sleep -Seconds 3; & $python 'monitor.py'; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } } finally { Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue }"
+                    '''
+                }
 
                 archiveArtifacts artifacts: 'monitoring_history.csv',
                                  fingerprint: true
@@ -156,6 +160,36 @@ pipeline {
                 echo 'Monitoring stage PASSED'
                 echo 'Production health monitoring completed successfully'
                 echo 'Monitoring results and alert status recorded'
+            }
+
+            post {
+                failure {
+                    echo 'Monitoring failure detected - sending automatic email alert'
+
+                    emailext(
+                        to: 'raghavsharmaaustralia@gmail.com',
+                        subject: "ALERT: ${APP_NAME} Production Monitoring Failed - Build #${BUILD_NUMBER}",
+                        body: """TASKFLOW PRODUCTION ALERT
+
+Jenkins detected a failure during the production Monitoring stage.
+
+Application: ${APP_NAME}
+Build Version: ${BUILD_VERSION}
+Build Number: ${BUILD_NUMBER}
+Status: UNHEALTHY
+
+The production health monitoring gate has failed.
+Please review the Jenkins console output for incident details.
+
+Jenkins Build:
+${BUILD_URL}
+
+This alert was generated automatically by the TaskFlow DevOps pipeline.
+"""
+                    )
+
+                    echo 'Automatic monitoring alert email sent'
+                }
             }
         }
     }
